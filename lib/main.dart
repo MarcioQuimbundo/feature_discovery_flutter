@@ -1,3 +1,4 @@
+import 'package:feature_discovery/layout.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -24,39 +25,25 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return OverlayBuilder(
-      showOverlay: true,
-      overlayBuilder: (BuildContext context) {
-        return CenterAbout(
-          position: Offset(200.0, 500.0),
-          child: Container(
-            width: 50.0,
-            height: 50.0,
-            decoration:
-                BoxDecoration(shape: BoxShape.circle, color: Colors.purple),
-          ),
-        );
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.green,
-          leading: IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () {},
-          ),
-          title: Text(""),
-          actions: <Widget>[
-            IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {},
-            ),
-          ],
-        ),
-        body: Content(),
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.green,
+        leading: IconButton(
+          icon: Icon(Icons.menu),
           onPressed: () {},
         ),
+        title: Text(""),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: Content(),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {},
       ),
     );
   }
@@ -112,149 +99,15 @@ class _ContentState extends State<Content> {
           right: 0,
           child: FractionalTranslation(
             translation: Offset(-0.5, -0.5),
-            child: AnchoredOverlay(
-              showOverlay: true,
-              overlayBuilder: (BuildContext context, Offset anchor) {
-                return CenterAbout(
-                  position: anchor,
-                  child: Text("Hello"),
-                );
-              },
-              child: FloatingActionButton(
-                onPressed: () {},
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.blue,
-                child: Icon(Icons.drive_eta),
-              ),
+            child: FloatingActionButton(
+              onPressed: () {},
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.blue,
+              child: Icon(Icons.drive_eta),
             ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class AnchoredOverlay extends StatelessWidget {
-  final bool showOverlay;
-  final Widget Function(BuildContext, Offset anchor) overlayBuilder;
-  final Widget child;
-  AnchoredOverlay({this.showOverlay, this.overlayBuilder, this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          return OverlayBuilder(
-            showOverlay: showOverlay,
-            overlayBuilder: (BuildContext overlayContext) {
-              RenderBox box = context.findRenderObject() as RenderBox;
-              final center = box.size.center(box.localToGlobal(Offset(0.0, 0.0)));
-              return overlayBuilder(overlayContext, center);
-            },
-            child: child,
-          );
-        },
-      ),
-    );
-  }
-}
-
-class OverlayBuilder extends StatefulWidget {
-  final bool showOverlay;
-  final Function(BuildContext) overlayBuilder;
-  final Widget child;
-  OverlayBuilder({this.showOverlay = false, this.overlayBuilder, this.child});
-
-  _OverlayBuilderState createState() => _OverlayBuilderState();
-}
-
-class _OverlayBuilderState extends State<OverlayBuilder> {
-  OverlayEntry overlayEntry;
-
-  @override
-  void initState() {
-    super.initState();
-
-    if (widget.showOverlay) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => showOverlay());
-    }
-  }
-
-  @override
-  void didUpdateWidget(OverlayBuilder oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    WidgetsBinding.instance.addPostFrameCallback((_) => syncWidgetAndOverlay());
-  }
-
-  @override
-  void reassemble() {
-    super.reassemble();
-    WidgetsBinding.instance.addPostFrameCallback((_) => syncWidgetAndOverlay());
-  }
-
-  @override
-  void dispose() {
-    if (isShowingOverlay()) {
-      hideOverlay();
-    }
-    super.dispose();
-  }
-
-  bool isShowingOverlay() => overlayEntry != null;
-
-  void showOverlay() {
-    overlayEntry = new OverlayEntry(
-      builder: widget.overlayBuilder,
-    );
-    addToOverlay(overlayEntry);
-  }
-
-  void addToOverlay(OverlayEntry entry) async {
-    print('addToOverlay');
-    Overlay.of(context).insert(entry);
-  }
-
-  void hideOverlay() {
-    print('hideOverlay');
-    overlayEntry.remove();
-    overlayEntry = null;
-  }
-
-  void syncWidgetAndOverlay() {
-    if (isShowingOverlay() && !widget.showOverlay) {
-      hideOverlay();
-    } else if (!isShowingOverlay() && widget.showOverlay) {
-      showOverlay();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: widget.child,
-    );
-  }
-}
-
-class CenterAbout extends StatelessWidget {
-  final Offset position;
-  final Widget child;
-
-  CenterAbout({
-    this.position,
-    this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return new Positioned(
-      top: position.dy,
-      left: position.dx,
-      child: new FractionalTranslation(
-        translation: const Offset(-0.5, -0.5),
-        child: child,
-      ),
     );
   }
 }
