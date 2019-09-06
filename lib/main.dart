@@ -25,7 +25,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return OverlayBuilder(
-      showOverlay: false,
+      showOverlay: true,
       overlayBuilder: (BuildContext context) {
         return CenterAbout(
           position: Offset(200.0, 500.0),
@@ -112,15 +112,50 @@ class _ContentState extends State<Content> {
           right: 0,
           child: FractionalTranslation(
             translation: Offset(-0.5, -0.5),
-            child: FloatingActionButton(
-              onPressed: () {},
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.blue,
-              child: Icon(Icons.drive_eta),
+            child: AnchoredOverlay(
+              showOverlay: true,
+              overlayBuilder: (BuildContext context, Offset anchor) {
+                return CenterAbout(
+                  position: anchor,
+                  child: Text("Hello"),
+                );
+              },
+              child: FloatingActionButton(
+                onPressed: () {},
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.blue,
+                child: Icon(Icons.drive_eta),
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class AnchoredOverlay extends StatelessWidget {
+  final bool showOverlay;
+  final Widget Function(BuildContext, Offset anchor) overlayBuilder;
+  final Widget child;
+  AnchoredOverlay({this.showOverlay, this.overlayBuilder, this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return OverlayBuilder(
+            showOverlay: showOverlay,
+            overlayBuilder: (BuildContext overlayContext) {
+              RenderBox box = context.findRenderObject() as RenderBox;
+              final center = box.size.center(box.localToGlobal(Offset(0.0, 0.0)));
+              return overlayBuilder(overlayContext, center);
+            },
+            child: child,
+          );
+        },
+      ),
     );
   }
 }
