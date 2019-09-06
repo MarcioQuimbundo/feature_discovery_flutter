@@ -7,56 +7,106 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Feature Discovery',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        backgroundColor: Colors.green,
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {},
+        ),
+        title: Text(""),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {},
+          ),
+        ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: Content(),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {},
+      ),
+    );
+  }
+}
+
+class Content extends StatefulWidget {
+  _ContentState createState() => _ContentState();
+}
+
+class _ContentState extends State<Content> {
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        Column(
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+            Image.network(
+              "https://www.visitnewportbeach.com/wp-content/uploads/2018/04/star700x400-700x400.jpg",
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: 200.0,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16.0),
+              color: Colors.blue,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Starbucks Coffe",
+                    style: TextStyle(color: Colors.white, fontSize: 24),
+                  ),
+                  Text(
+                    "Coffe Shop",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ],
+              ),
             ),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16.0),
+              child: RaisedButton(
+                onPressed: () {},
+                child: Text("Do Feature Discovery"),
+              ),
+            )
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), 
+        Positioned(
+          top: 200,
+          right: 0,
+          child: FractionalTranslation(
+            translation: Offset(-0.5, -0.5),
+            child: FloatingActionButton(
+              onPressed: () {},
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.blue,
+              child: Icon(Icons.drive_eta),
+            ),
+          ),
+        )
+      ],
     );
   }
 }
