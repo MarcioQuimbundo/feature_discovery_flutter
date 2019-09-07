@@ -128,14 +128,14 @@ class CenterAbout extends StatelessWidget {
 
 /*  - - - - - - - - - - - - - -   */
 class DescribedFeatureOverlay extends StatefulWidget {
-  final bool showOverlay;
+  final String featureId;
   final IconData icon;
   final Color color;
   final String title;
   final String description;
   final Widget child;
   DescribedFeatureOverlay(
-      {this.showOverlay,
+      {this.featureId,
       this.icon,
       this.color,
       this.title,
@@ -148,10 +148,18 @@ class DescribedFeatureOverlay extends StatefulWidget {
 
 class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> {
   Size screenSize;
+  bool showOverlay = false;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     screenSize = MediaQuery.of(context).size;
+
+    showOverlayIfActiveStep();
+  }
+
+  void showOverlayIfActiveStep() {
+    String activeStep = FeatureDiscovery.activeStep(context);
+    setState(() => showOverlay = activeStep == widget.featureId);
   }
 
   bool isCloseToTopOrBottom(Offset position) {
@@ -182,10 +190,18 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> {
     }
   }
 
+  void activate() {
+    FeatureDiscovery.markStepComplete(context, widget.featureId);
+  }
+
+  void dismiss() {
+    FeatureDiscovery.dismiss(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnchoredOverlay(
-      showOverlay: widget.showOverlay,
+      showOverlay: showOverlay,
       overlayBuilder: (BuildContext context, Offset anchor) {
         final touchTargetRadius = 44.0;
         final contentOrientation = getContentOrientation(anchor);
@@ -212,6 +228,14 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> {
 
         return Stack(
           children: <Widget>[
+            GestureDetector(
+              onTap: dismiss,
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.transparent,
+              ),
+            ),
             CenterAbout(
               position: backgroundPosition,
               child: Container(
@@ -257,7 +281,7 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> {
                 height: 2 * touchTargetRadius,
                 child: RawMaterialButton(
                   shape: CircleBorder(),
-                  onPressed: () {},
+                  onPressed: activate,
                   fillColor: Colors.white,
                   child: Icon(
                     widget.icon,
@@ -271,6 +295,96 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> {
       },
       child: widget.child,
     );
+  }
+}
+
+class FeatureDiscovery extends StatefulWidget {
+  static String activeStep(BuildContext context) {
+    return (context.inheritFromWidgetOfExactType(_InheritedFeatureDiscovery)
+            as _InheritedFeatureDiscovery)
+        .activeStepId;
+  }
+
+  static void discoverFeatures(BuildContext context, List<String> steps) {
+    _FeatureDiscoveryState state =
+        context.ancestorStateOfType(TypeMatcher<_FeatureDiscoveryState>())
+            as _FeatureDiscoveryState;
+
+    state.discoverFeatures(steps);
+  }
+
+  static void markStepComplete(BuildContext context, String stepId) {
+    _FeatureDiscoveryState state =
+        context.ancestorStateOfType(TypeMatcher<_FeatureDiscoveryState>())
+            as _FeatureDiscoveryState;
+
+    state.markStepComplete(stepId);
+  }
+
+  static void dismiss(BuildContext context) {
+    _FeatureDiscoveryState state =
+        context.ancestorStateOfType(TypeMatcher<_FeatureDiscoveryState>())
+            as _FeatureDiscoveryState;
+
+    state.dismiss();
+  }
+
+  final Widget child;
+  FeatureDiscovery({this.child});
+
+  _FeatureDiscoveryState createState() => _FeatureDiscoveryState();
+}
+
+class _FeatureDiscoveryState extends State<FeatureDiscovery> {
+  List<String> steps;
+  int activeStepIndex;
+
+  void discoverFeatures(List<String> steps) {
+    setState(() {
+      this.steps = steps;
+      activeStepIndex = 0;
+    });
+  }
+
+  void markStepComplete(String stepId) {
+    if (steps != null && steps[activeStepIndex] == stepId) {
+      setState(() {
+        ++activeStepIndex;
+        if (activeStepIndex >= steps.length) {
+          _cleanupAfterSteps();
+        }
+      });
+    }
+  }
+
+  void dismiss() {
+    setState(() {
+      _cleanupAfterSteps();
+    });
+  }
+
+  void _cleanupAfterSteps() {
+    steps = null;
+    activeStepIndex = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _InheritedFeatureDiscovery(
+      activeStepId: steps?.elementAt(activeStepIndex),
+      child: widget.child,
+    );
+  }
+}
+
+class _InheritedFeatureDiscovery extends InheritedWidget {
+  final String activeStepId;
+
+  _InheritedFeatureDiscovery({this.activeStepId, child}) : super(child: child);
+
+  @override
+  bool updateShouldNotify(_InheritedFeatureDiscovery oldWidget) {
+    return oldWidget.activeStepId != activeStepId;
   }
 }
 

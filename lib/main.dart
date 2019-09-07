@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
 
+final feature1 = "FEATURE_1";
+final feature2 = "FEATURE_2";
+final feature3 = "FEATURE_3";
+final feature4 = "FEATURE_4";
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -25,45 +30,47 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        leading: DescribedFeatureOverlay(
-          showOverlay: false,
-          icon: Icons.menu,
-          color: Colors.green,
-          title: "The title",
-          description: "The description",
-          child: IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () {},
-          ),
-        ),
-        title: Text(""),
-        actions: <Widget>[
-          DescribedFeatureOverlay(
-            showOverlay: false,
-            icon: Icons.search,
+    return FeatureDiscovery(
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.green,
+          leading: DescribedFeatureOverlay(
+            featureId: feature1,
+            icon: Icons.menu,
             color: Colors.green,
             title: "The title",
             description: "The description",
             child: IconButton(
-              icon: Icon(Icons.search),
+              icon: Icon(Icons.menu),
               onPressed: () {},
             ),
           ),
-        ],
-      ),
-      body: Content(),
-      floatingActionButton: DescribedFeatureOverlay(
-        showOverlay: false,
-        icon: Icons.add,
-        color: Colors.blue,
-        title: "The title",
-        description: "The description",
-        child: FloatingActionButton(
-          child: Icon(Icons.add),
-          onPressed: () {},
+          title: Text(""),
+          actions: <Widget>[
+            DescribedFeatureOverlay(
+              featureId: feature2,
+              icon: Icons.search,
+              color: Colors.green,
+              title: "The title",
+              description: "The description",
+              child: IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {},
+              ),
+            ),
+          ],
+        ),
+        body: Content(),
+        floatingActionButton: DescribedFeatureOverlay(
+          featureId: feature3,
+          icon: Icons.add,
+          color: Colors.blue,
+          title: "The title",
+          description: "The description",
+          child: FloatingActionButton(
+            child: Icon(Icons.add),
+            onPressed: () {},
+          ),
         ),
       ),
     );
@@ -109,7 +116,10 @@ class _ContentState extends State<Content> {
               width: double.infinity,
               padding: EdgeInsets.all(16.0),
               child: RaisedButton(
-                onPressed: () {},
+                onPressed: () {
+                  FeatureDiscovery.discoverFeatures(
+                      context, [feature1, feature2, feature3, feature4]);
+                },
                 child: Text("Do Feature Discovery"),
               ),
             )
@@ -121,7 +131,7 @@ class _ContentState extends State<Content> {
           child: FractionalTranslation(
             translation: Offset(-0.5, -0.5),
             child: DescribedFeatureOverlay(
-              showOverlay: false,
+              featureId: feature4,
               icon: Icons.drive_eta,
               color: Colors.blue,
               title: "The title",
