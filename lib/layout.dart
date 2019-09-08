@@ -96,8 +96,12 @@ class _OverlayBuilderState extends State<OverlayBuilder> {
     }
   }
 
+  void buildOverlay() async {
+    overlayEntry?.markNeedsBuild();
+  }
   @override
   Widget build(BuildContext context) {
+    buildOverlay();
     return Container(
       child: widget.child,
     );

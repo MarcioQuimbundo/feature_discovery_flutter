@@ -111,9 +111,37 @@ class DescribedFeatureOverlay extends StatefulWidget {
       _DescribedFeatureOverlayState();
 }
 
-class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> {
+class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay>
+    with TickerProviderStateMixin {
   Size screenSize;
   bool showOverlay = false;
+  _OverlayState state = _OverlayState.closed;
+  double transitionPercent = 1.0;
+
+  AnimationController openController;
+
+  @override
+  void initState() {
+    super.initState();
+    initAnimationController();
+    openController.forward();
+  }
+
+  void initAnimationController() {
+    openController =
+        AnimationController(duration: Duration(milliseconds: 3000), vsync: this)
+          ..addListener(() {
+            setState(() => transitionPercent = openController.value);
+          })
+          ..addStatusListener((AnimationStatus status) {
+            if (status == AnimationStatus.forward) {
+              setState(() => state = _OverlayState.opening);
+            } else if (status == AnimationStatus.completed) {
+              //TODO
+            }
+          });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -125,6 +153,10 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> {
   void showOverlayIfActiveStep() {
     String activeStep = FeatureDiscovery.activeStep(context);
     setState(() => showOverlay = activeStep == widget.featureId);
+
+    if (activeStep == widget.featureId) {
+      openController.forward();
+    }
   }
 
   void activate() {
@@ -147,14 +179,14 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> {
           ),
         ),
         new _Background(
-            state: _OverlayState.opening,
-            transitionPercent: 1.0,
+            state: state,
+            transitionPercent: transitionPercent,
             anchor: anchor,
             color: widget.color,
             screenSize: screenSize),
         new _Content(
-          state: _OverlayState.opening,
-          transitionPercent: 1.0,
+          state: state,
+          transitionPercent: transitionPercent,
           anchor: anchor,
           screenSize: screenSize,
           title: widget.title,
@@ -163,8 +195,8 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> {
           touchTargetToContentPadding: 20.0,
         ),
         new _TouchTarget(
-            state: _OverlayState.opening,
-            transitionPercent: 1.0,
+            state: state,
+            transitionPercent: transitionPercent,
             anchor: anchor,
             icon: widget.icon,
             color: widget.color,
@@ -211,28 +243,67 @@ class _Background extends StatelessWidget {
     return position.dx < (screenSize.width / 2.0);
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Offset backgroundPosition() {
+    final isBackgroundCentered = isCloseToTopOrBottom(anchor);
+    if (isBackgroundCentered) {
+      return anchor;
+    } else {
+      final startingBackgroundPosition = anchor;
+      final endingBackgroundPosition = Offset(
+          screenSize.width / 2.0 +
+              (isOnLeftHalfOfScreen(anchor) ? -20.0 : 20.0),
+          anchor.dy +
+              (isOnTopHalfOfScreen(anchor)
+                  ? -(screenSize.width / 2.0) + 40.0
+                  : (screenSize.width / 2.0) - 40.0));
+
+      switch (state) {
+        case _OverlayState.opening:
+          return Offset.lerp(startingBackgroundPosition,
+              endingBackgroundPosition, transitionPercent);
+          break;
+        default:
+          return endingBackgroundPosition;
+      }
+    }
+  }
+
+  double radius() {
     final isBackgroundCentered = isCloseToTopOrBottom(anchor);
     final backgroundRadius =
         screenSize.width * (isBackgroundCentered ? 1.0 : 0.75);
 
-    final backgroundPosition = isBackgroundCentered
-        ? anchor
-        : Offset(
-            screenSize.width / 2.0 +
-                (isOnLeftHalfOfScreen(anchor) ? -20.0 : 20.0),
-            anchor.dy +
-                (isOnTopHalfOfScreen(anchor)
-                    ? -(screenSize.width / 2.0) + 40.0
-                    : (screenSize.width / 2.0) - 40.0));
+    switch (state) {
+      case _OverlayState.opening:
+        return backgroundRadius * transitionPercent;
+      default:
+        return backgroundRadius;
+    }
+  }
+
+  double backgroundOpacity() {
+    switch (state) {
+      case _OverlayState.opening:
+        return 0.96 * transitionPercent;
+        break;
+      default:
+        return 0.96;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (state == _OverlayState.closed) {
+      return Container();
+    }
     return CenterAbout(
-      position: backgroundPosition,
+      position: backgroundPosition(),
       child: Container(
-        width: 2 * backgroundRadius,
-        height: 2 * backgroundRadius,
+        width: 2 * radius(),
+        height: 2 * radius(),
         decoration: BoxDecoration(
-            shape: BoxShape.circle, color: color.withOpacity(0.96)),
+            shape: BoxShape.circle,
+            color: color.withOpacity(backgroundOpacity())),
       ),
     );
   }
@@ -339,14 +410,22 @@ class _TouchTarget extends StatelessWidget {
       this.color,
       this.onPressed});
 
+  double radius() {
+    switch (state) {
+      case _OverlayState.closed:
+        return 0.0;
+      case _OverlayState.opening:
+        return 44.0 * transitionPercent;
+      default:
+    }
+  }
   @override
   Widget build(BuildContext context) {
-    final touchTargetRadius = 44.0;
     return CenterAbout(
       position: anchor,
       child: Container(
-        width: 2 * touchTargetRadius,
-        height: 2 * touchTargetRadius,
+        width: 2 * radius(),
+        height: 2 * radius(),
         child: RawMaterialButton(
           shape: CircleBorder(),
           onPressed: onPressed,
@@ -363,4 +442,4 @@ class _TouchTarget extends StatelessWidget {
 
 enum DescribedFeatureContentOrientation { above, below }
 
-enum _OverlayState { close, opening, pulsing, activating, dismissing }
+enum _OverlayState { closed, opening, pulsing, activating, dismissing }
